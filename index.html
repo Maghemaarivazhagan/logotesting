@@ -6,109 +6,155 @@
     <title>Jewelry Rebrander Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --p: #2563eb; --bg: #f1f5f9; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .app-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 480px; box-sizing: border-box; }
+        :root { --p: #2563eb; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Logo Preview Style */
-        .logo-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        #logoPreview { width: 60px; height: 60px; border-radius: 50%; border: 2px dashed #cbd5e1; object-fit: contain; background: #fff; }
+        .app-card { background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 100%; max-width: 500px; box-sizing: border-box; }
+        
+        /* Branding Section */
+        .branding-header { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 20px; }
+        #logoPreview { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--p); object-fit: contain; background: #fff; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); }
+        
+        .label-tag { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 14px; border: 1px solid #334155; border-radius: 15px; background: #0f172a; color: #fff; font-size: 16px; box-sizing: border-box; }
 
-        /* Thumbnail Scroller */
-        .thumb-scroller { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; scrollbar-width: none; }
-        .thumb { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0; border: 3px solid transparent; opacity: 0.6; }
-        .thumb.active { border-color: var(--p); opacity: 1; transform: scale(1.05); }
+        /* Thumbnail Grid */
+        .grid-title { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; }
+        .thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin: 15px 0; }
+        .thumb-item { position: relative; border-radius: 15px; overflow: hidden; aspect-ratio: 1/1; border: 2px solid transparent; background: #0f172a; }
+        .thumb-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+        .thumb-item.customized { border-color: #10b981; }
+        .thumb-item.active { border-color: var(--p); }
+        .btn-edit-small { position: absolute; bottom: 5px; right: 5px; background: var(--p); border: none; color: white; border-radius: 8px; padding: 4px 8px; font-size: 10px; font-weight: bold; cursor: pointer; }
 
-        canvas { width: 100%; border-radius: 15px; background: #eee; touch-action: none; border: 1px solid #e2e8f0; }
-        .btn-go { background: #000; color: white; border: none; padding: 18px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px; }
-        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: bold; background: #e2e8f0; }
-        .mode-btn.active { background: var(--p); color: white; }
-        .status { text-align: center; margin-top: 10px; font-size: 14px; font-weight: 700; color: var(--p); }
+        /* Overlay Editor */
+        #editorOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 100; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
+        canvas { width: 100%; max-width: 450px; border-radius: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); touch-action: none; background: #000; }
+        
+        .editor-tools { width: 100%; max-width: 450px; display: flex; gap: 10px; margin-bottom: 15px; }
+        .tool-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; background: #334155; color: white; }
+        .tool-btn.active { background: var(--p); }
+        .btn-done { background: #10b981; color: white; padding: 15px 40px; border-radius: 15px; border: none; font-weight: bold; margin-top: 20px; width: 100%; max-width: 450px; }
+
+        .btn-main { background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; border: none; padding: 20px; width: 100%; border-radius: 20px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); }
+        .status { text-align: center; margin-top: 15px; font-size: 14px; color: var(--p); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="app-card">
-    <div class="logo-header">
+    <h2 style="text-align: left; margin-bottom: 5px;">Rebrand Engine</h2>
+    <p style="color: #94a3b8; font-size: 13px; margin-bottom: 25px;">Professional Jewelry Batch Processor</p>
+
+    <div class="branding-header">
         <img id="logoPreview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
         <div style="flex:1">
-            <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">1. Brand Logo</label>
-            <input type="file" id="logoInp" accept="image/*" style="font-size: 12px;">
+            <span class="label-tag">Brand Assets</span>
+            <input type="file" id="logoInp" accept="image/*">
         </div>
     </div>
 
     <div class="group">
-        <input type="text" id="phoneInp" placeholder="WhatsApp Number" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; box-sizing:border-box;">
+        <span class="label-tag">Contact Label</span>
+        <input type="text" id="phoneInp" placeholder="e.g. +91 98765 43210">
     </div>
 
-    <div style="margin: 15px 0;">
-        <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">2. Select Batch</label>
-        <input type="file" id="batchInp" accept="image/*" multiple style="width:100%;">
+    <div class="group" style="margin-top: 25px;">
+        <span class="label-tag">Stock Management</span>
+        <input type="file" id="batchInp" accept="image/*" multiple>
     </div>
 
-    <!-- The Individual Preview Scroller -->
-    <div id="thumbWrapper" class="thumb-scroller"></div>
-
-    <div id="editorArea" style="display:none;">
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <button id="lBtn" class="mode-btn active" onclick="setMode('logo')">Logo Area</button>
-            <button id="pBtn" class="mode-btn" onclick="setMode('phone')">Phone Area</button>
-            <button class="mode-btn" style="background:#f1f5f9; color:#000;" onclick="clearCurrent()">Reset</button>
-        </div>
-        <canvas id="cvs"></canvas>
+    <div class="grid-title">
+        <span class="label-tag">Batch Gallery</span>
+        <span id="batchCount" style="font-size: 10px; color: var(--p);">0 Files</span>
     </div>
+    <div id="thumbGrid" class="thumb-grid"></div>
 
-    <button class="btn-go" onclick="startProcess()">DOWNLOAD ALL (ZIP)</button>
+    <button class="btn-main" onclick="startProcess()">PROCESS & DOWNLOAD ZIP</button>
     <div id="status" class="status">Ready</div>
+</div>
+
+<!-- FULL SCREEN CUSTOMIZER -->
+<div id="editorOverlay">
+    <div style="display: flex; justify-content: space-between; width: 100%; max-width: 450px; margin-bottom: 20px;">
+        <h3 style="margin:0">Customize Placement</h3>
+        <button onclick="closeEditor()" style="background: none; border: none; color: white; font-size: 20px;">✕</button>
+    </div>
+    
+    <div class="editor-tools">
+        <button id="lBtn" class="tool-btn active" onclick="setMode('logo')">Logo Spot</button>
+        <button id="pBtn" class="tool-btn" onclick="setMode('phone')">Phone Spot</button>
+        <button class="tool-btn" style="background: #ef4444;" onclick="clearCurrent()">Reset</button>
+    </div>
+
+    <canvas id="cvs"></canvas>
+
+    <button class="btn-done" onclick="closeEditor()">SAVE PLACEMENT</button>
 </div>
 
 <script>
     const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
-    let brandLogo = null, files = [], fileData = [], activeIdx = 0, editMode = 'logo';
+    let brandLogo = null, fileData = [], activeIdx = 0, editMode = 'logo';
     let isDrawing = false, startX, startY;
 
-    // 1. Logo Preview Logic
+    // Handle Logo Loading
     document.getElementById('logoInp').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
+        const r = new FileReader();
+        r.onload = (ev) => {
             brandLogo = new Image();
-            brandLogo.onload = () => { document.getElementById('logoPreview').src = ev.target.result; };
+            brandLogo.onload = () => document.getElementById('logoPreview').src = ev.target.result;
             brandLogo.src = ev.target.result;
         };
-        reader.readAsDataURL(e.target.files[0]);
+        r.readAsDataURL(e.target.files[0]);
     };
 
-    // 2. Batch Upload & Thumbnail Creation
+    // Handle Batch Loading
     document.getElementById('batchInp').onchange = (e) => {
-        files = Array.from(e.target.files);
-        fileData = files.map(f => ({ file: f, logoTarget: null, phoneTarget: null, color: "#ffffff" }));
+        const files = Array.from(e.target.files);
+        fileData = files.map(f => ({ file: f, logoTarget: null, phoneTarget: null, color: "#ffffff", imgObj: null }));
         
-        const wrapper = document.getElementById('thumbWrapper');
-        wrapper.innerHTML = "";
-        
+        document.getElementById('batchCount').innerText = `${files.length} Files Loaded`;
+        renderGrid();
+    };
+
+    function renderGrid() {
+        const grid = document.getElementById('thumbGrid');
+        grid.innerHTML = "";
         fileData.forEach((data, i) => {
+            const div = document.createElement('div');
+            div.className = "thumb-item" + (data.logoTarget ? " customized" : "");
+            
             const img = document.createElement('img');
             img.src = URL.createObjectURL(data.file);
-            img.className = "thumb" + (i === 0 ? " active" : "");
-            img.onclick = () => selectImage(i);
-            wrapper.appendChild(img);
+            
+            const btn = document.createElement('button');
+            btn.className = "btn-edit-small";
+            btn.innerText = "CUSTOMIZE";
+            btn.onclick = () => openEditor(i);
+            
+            div.appendChild(img);
+            div.appendChild(btn);
+            grid.appendChild(div);
         });
+    }
 
-        document.getElementById('editorArea').style.display = "block";
-        selectImage(0);
-    };
-
-    function selectImage(idx) {
+    function openEditor(idx) {
         activeIdx = idx;
-        document.querySelectorAll('.thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+        const data = fileData[idx];
+        document.getElementById('editorOverlay').style.display = "flex";
         
         const img = new Image();
         img.onload = () => {
             cvs.width = img.width; cvs.height = img.height;
-            fileData[activeIdx].imgObj = img;
+            data.imgObj = img;
             refreshCanvas();
         };
-        img.src = URL.createObjectURL(fileData[activeIdx].file);
+        img.src = URL.createObjectURL(data.file);
+    }
+
+    function closeEditor() {
+        document.getElementById('editorOverlay').style.display = "none";
+        renderGrid();
     }
 
     function refreshCanvas() {
@@ -118,42 +164,50 @@
         
         if(data.logoTarget) {
             ctx.fillStyle = data.color; ctx.fillRect(data.logoTarget.x, data.logoTarget.y, data.logoTarget.w, data.logoTarget.h);
-            ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 6; ctx.strokeRect(data.logoTarget.x, data.logoTarget.y, data.logoTarget.w, data.logoTarget.h);
+            ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 8; ctx.strokeRect(data.logoTarget.x, data.logoTarget.y, data.logoTarget.w, data.logoTarget.h);
         }
         if(data.phoneTarget) {
-            ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.fillRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
-            ctx.strokeStyle = "#16a34a"; ctx.lineWidth = 6; ctx.strokeRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
+            ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
+            ctx.strokeStyle = "#10b981"; ctx.lineWidth = 8; ctx.strokeRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
         }
     }
 
-    // Drawing Logic
-    function handleStart(x, y) {
-        isDrawing = true;
+    // Drawing Listeners
+    function getXY(e) {
         const rect = cvs.getBoundingClientRect();
-        startX = (x - rect.left) * (cvs.width / rect.width);
-        startY = (y - rect.top) * (cvs.height / rect.height);
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: (clientX - rect.left) * (cvs.width / rect.width),
+            y: (clientY - rect.top) * (cvs.height / rect.height)
+        };
+    }
+
+    function handleStart(e) {
+        isDrawing = true;
+        const pos = getXY(e);
+        startX = pos.x; startY = pos.y;
         if(editMode === 'logo') {
             const p = ctx.getImageData(startX, startY, 1, 1).data;
             fileData[activeIdx].color = `rgb(${p[0]},${p[1]},${p[2]})`;
         }
     }
 
-    function handleMove(x, y) {
+    function handleMove(e) {
         if(!isDrawing) return;
-        const rect = cvs.getBoundingClientRect();
-        const curX = (x - rect.left) * (cvs.width / rect.width);
-        const curY = (y - rect.top) * (cvs.height / rect.height);
-        const area = { x: startX, y: startY, w: curX - startX, h: curY - startY };
+        const pos = getXY(e);
+        const area = { x: startX, y: startY, w: pos.x - startX, h: pos.y - startY };
         if(editMode === 'logo') fileData[activeIdx].logoTarget = area;
         else fileData[activeIdx].phoneTarget = area;
         refreshCanvas();
+        if(e.touches) e.preventDefault();
     }
 
-    cvs.onmousedown = (e) => handleStart(e.clientX, e.clientY);
-    cvs.onmousemove = (e) => handleMove(e.clientX, e.clientY);
+    cvs.onmousedown = handleStart;
+    cvs.onmousemove = handleMove;
     window.onmouseup = () => isDrawing = false;
-    cvs.addEventListener('touchstart', (e) => handleStart(e.touches[0].clientX, e.touches[0].clientY));
-    cvs.addEventListener('touchmove', (e) => { handleMove(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, {passive:false});
+    cvs.addEventListener('touchstart', handleStart);
+    cvs.addEventListener('touchmove', handleMove, {passive:false});
     cvs.addEventListener('touchend', () => isDrawing = false);
 
     function setMode(m) { 
@@ -161,56 +215,63 @@
         document.getElementById('lBtn').classList.toggle('active', m==='logo');
         document.getElementById('pBtn').classList.toggle('active', m==='phone');
     }
+    
     function clearCurrent() {
         if(editMode === 'logo') fileData[activeIdx].logoTarget = null;
         else fileData[activeIdx].phoneTarget = null;
         refreshCanvas();
     }
 
+    // Process Final
     async function startProcess() {
-        if(!fileData.length || !brandLogo) return alert("Upload logo and batch!");
-        const zip = new JSZip(), phone = document.getElementById('phoneInp').value;
+        if(!fileData.length || !brandLogo) return alert("Missing Logo or Stock!");
+        const zip = new JSZip(), phoneText = document.getElementById('phoneInp').value;
+        const status = document.getElementById('status');
+
         for(let i=0; i<fileData.length; i++) {
-            document.getElementById('status').innerText = `Finalizing ${i+1}/${fileData.length}`;
-            const canvas = await renderFinal(fileData[i], phone);
+            status.innerText = `Rendering ${i+1}/${fileData.length}`;
+            const canvas = await finalizeImage(fileData[i], phoneText);
             const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-            zip.file(`jewel_${i+1}.jpg`, blob);
+            zip.file(`rebranded_${i+1}.jpg`, blob);
         }
+        
         const content = await zip.generateAsync({type:"blob"});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = "Custom_Jewelry_Batch.zip";
+        link.download = "Rebranded_Jewelry.zip";
         link.click();
-        document.getElementById('status').innerText = "Complete!";
+        status.innerText = "Complete!";
     }
 
-    function renderFinal(data, phoneText) {
+    function finalizeImage(data, phone) {
         return new Promise(res => {
-            const c = document.createElement('canvas'), x = c.getContext('2d'), img = data.imgObj;
-            c.width = img.width; c.height = img.height;
-            x.drawImage(img, 0, 0);
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas'), x = c.getContext('2d');
+                c.width = img.width; c.height = img.height;
+                x.drawImage(img, 0, 0);
 
-            // Use custom target or default top-left
-            const lT = data.logoTarget || { x: 30, y: 30, w: c.height*0.15, h: c.height*0.15 };
-            if(data.logoTarget) { x.fillStyle = data.color; x.fillRect(lT.x, lT.y, lT.w, lT.h); }
-            const s = Math.min(lT.w / brandLogo.width, lT.h / brandLogo.height);
-            x.drawImage(brandLogo, lT.x, lT.y, brandLogo.width * s, brandLogo.height * s);
+                const lT = data.logoTarget || { x: 40, y: 40, w: c.height*0.18, h: c.height*0.18 };
+                if(data.logoTarget) { x.fillStyle = data.color; x.fillRect(lT.x, lT.y, lT.w, lT.h); }
+                const s = Math.min(lT.w / brandLogo.width, lT.h / brandLogo.height);
+                x.drawImage(brandLogo, lT.x, lT.y, brandLogo.width * s, brandLogo.height * s);
 
-            // Use custom phone target or default bottom bar
-            if(phoneText) {
-                if(data.phoneTarget) {
-                    x.fillStyle = "white"; x.fillRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
-                    x.fillStyle = "black"; x.font = `bold ${data.phoneTarget.h * 0.6}px sans-serif`;
-                    x.textAlign = "center"; x.textBaseline = "middle";
-                    x.fillText(phoneText, data.phoneTarget.x + (data.phoneTarget.w/2), data.phoneTarget.y + (data.phoneTarget.h/2));
-                } else {
-                    const bh = c.height * 0.08;
-                    x.fillStyle = "white"; x.fillRect(0, c.height-bh, c.width, bh);
-                    x.fillStyle = "black"; x.font = `bold ${bh*0.4}px sans-serif`;
-                    x.textAlign = "right"; x.fillText(phoneText, c.width-30, c.height-bh/2+10);
+                if(phone) {
+                    if(data.phoneTarget) {
+                        x.fillStyle = "white"; x.fillRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
+                        x.fillStyle = "black"; x.font = `bold ${data.phoneTarget.h * 0.6}px sans-serif`;
+                        x.textAlign = "center"; x.textBaseline = "middle";
+                        x.fillText(phone, data.phoneTarget.x + (data.phoneTarget.w/2), data.phoneTarget.y + (data.phoneTarget.h/2));
+                    } else {
+                        const bh = c.height * 0.08;
+                        x.fillStyle = "white"; x.fillRect(0, c.height-bh, c.width, bh);
+                        x.fillStyle = "black"; x.font = `bold ${bh*0.45}px sans-serif`;
+                        x.textAlign = "right"; x.fillText(phone, c.width-40, c.height-bh/2+10);
+                    }
                 }
-            }
-            res(c);
+                res(c);
+            };
+            img.src = URL.createObjectURL(data.file);
         });
     }
 </script>
