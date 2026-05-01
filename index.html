@@ -3,272 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jewelry Rebrander Pro</title>
+    <title>Wholesale Multi-Text Stamper</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --p: #2563eb; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        :root { --accent: #6366f1; --bg: #0f172a; --card: #1e293b; --danger: #ef4444; --success: #10b981; }
         
-        .app-card { background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 100%; max-width: 500px; box-sizing: border-box; }
-        
-        /* Branding Section */
-        .branding-header { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 20px; }
-        #logoPreview { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--p); object-fit: contain; background: #fff; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); }
-        
-        .label-tag { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 14px; border: 1px solid #334155; border-radius: 15px; background: #0f172a; color: #fff; font-size: 16px; box-sizing: border-box; }
+        /* Hide all scrollbars globally */
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; }
 
-        /* Thumbnail Grid */
-        .grid-title { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; }
-        .thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin: 15px 0; }
-        .thumb-item { position: relative; border-radius: 15px; overflow: hidden; aspect-ratio: 1/1; border: 2px solid transparent; background: #0f172a; }
-        .thumb-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
-        .thumb-item.customized { border-color: #10b981; }
-        .thumb-item.active { border-color: var(--p); }
-        .btn-edit-small { position: absolute; bottom: 5px; right: 5px; background: var(--p); border: none; color: white; border-radius: 8px; padding: 4px 8px; font-size: 10px; font-weight: bold; cursor: pointer; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: #f8fafc; 
+            margin: 0; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            overflow-x: hidden; 
+        }
 
-        /* Overlay Editor */
-        #editorOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 100; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
-        canvas { width: 100%; max-width: 450px; border-radius: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); touch-action: none; background: #000; }
+        .container { background: var(--card); padding: 20px; border-radius: 24px; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1); }
         
-        .editor-tools { width: 100%; max-width: 450px; display: flex; gap: 10px; margin-bottom: 15px; }
-        .tool-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; background: #334155; color: white; }
-        .tool-btn.active { background: var(--p); }
-        .btn-done { background: #10b981; color: white; padding: 15px 40px; border-radius: 15px; border: none; font-weight: bold; margin-top: 20px; width: 100%; max-width: 450px; }
+        .lib-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; min-height: 80px; }
+        .lib-item { position: relative; width: 65px; height: 65px; flex-shrink: 0; }
+        .lib-item img { width: 100%; height: 100%; border-radius: 12px; background: #fff; object-fit: contain; border: 2px solid transparent; cursor: pointer; }
+        .lib-item.active img { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        
+        .remove-icon { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--card); cursor: pointer; z-index: 10; font-weight: bold; }
+        .add-btn { width: 65px; height: 65px; border-radius: 12px; border: 2px dashed #334155; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; flex-shrink: 0; color: #94a3b8; }
 
-        .btn-main { background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; border: none; padding: 20px; width: 100%; border-radius: 20px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); }
-        .status { text-align: center; margin-top: 15px; font-size: 14px; color: var(--p); font-weight: bold; }
+        label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px; }
+        textarea, input[type="file"], input[type="color"], input[type="range"] { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
+        
+        #galleryContainer { display: none; margin-top: 20px; width: 100%; }
+        .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 16px; }
+        .thumb-box { position: relative; border-radius: 12px; aspect-ratio: 1/1; background: #000; }
+        .thumb-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid #334155; }
+
+        /* EDITOR: No scrollbars, fixed positions */
+        #editor { 
+            display: none; position: fixed; inset: 0; background: #000; z-index: 100; 
+            flex-direction: column; align-items: center; padding: 10px;
+            overflow: hidden; 
+        }
+        
+        .editor-header { width: 100%; max-width: 450px; flex-shrink: 0; }
+        
+        .editor-content { 
+            flex-grow: 1; 
+            width: 100%; 
+            max-width: 450px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .editor-footer { width: 100%; max-width: 450px; flex-shrink: 0; padding-top: 10px; }
+
+        canvas { 
+            width: 100%; 
+            max-width: 400px; 
+            max-height: 50vh; /* Prevents vertical overflow */
+            border-radius: 16px; 
+            touch-action: none; 
+            background: #111; 
+            cursor: crosshair;
+            object-fit: contain;
+        }
+        
+        .btn-main { background: var(--accent); color: white; border: none; padding: 18px; width: 100%; border-radius: 16px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .btn-save-one { background: #f59e0b; color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 5px; cursor: pointer; }
+        .btn-save-batch { background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 5px; cursor: pointer; }
+        .btn-view { background: #334155; color: white; border: none; padding: 12px; width: 100%; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
+        
+        .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+        .tool-btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <h2 style="text-align: left; margin-bottom: 5px;">Logo Rebrand</h2>
-   
+<div class="container">
+    <label>1. Logos</label>
+    <div class="lib-scroll" id="logoLib">
+        <div class="add-btn" onclick="document.getElementById('logoInp').click()">+</div>
+    </div>
+    <input type="file" id="logoInp" accept="image/*,.zip" multiple style="display:none">
 
-    <div class="branding-header">
-        <img id="logoPreview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
-        <div style="flex:1">
-            <span class="label-tag">Logo</span>
-            <input type="file" id="logoInp" accept="image/*">
+    <label>2. Stock (100+ Images)</label>
+    <input type="file" id="batchInp" accept="image/*,.zip" multiple>
+    
+    <button id="viewBtn" class="btn-view" onclick="toggleGallery()">📸 SHOW GALLERY / EDIT</button>
+
+    <div id="galleryContainer">
+        <div id="gallery" class="gallery"></div>
+    </div>
+
+    <button class="btn-main" onclick="startExport()">BRAND & DOWNLOAD ALL</button>
+</div>
+
+<div id="editor">
+    <div class="editor-header">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0">Layout Editor</h3>
+            <button onclick="closeEditor()" style="background:none; border:none; color:white; font-size:32px;">✕</button>
+        </div>
+
+        <div class="toolbar">
+            <button id="lMode" onclick="setMode('logo')" class="tool-btn" style="background:var(--accent)">Logos</button>
+            <button id="pMode" onclick="setMode('text')" class="tool-btn" style="background:#334155">Text</button>
+            <button onclick="resetPic()" class="tool-btn" style="background:var(--danger)">Reset</button>
         </div>
     </div>
 
-    <div class="group">
-        <span class="label-tag">phone number</span>
-        <input type="text" id="phoneInp" placeholder="e.g. +91 98765 43210">
-    </div>
+    <div class="editor-content">
+        <div id="textOptions" style="display:none; width:100%;">
+            <textarea id="customTextInp" placeholder="Enter text, then draw box..."></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <input type="color" id="textColor" value="#ffffff" style="height:40px; width:60px; margin:0; padding:2px;">
+                <input type="range" id="fontSlider" min="0" max="200" value="0" style="margin:0;">
+                <span id="fontVal" style="font-size:10px; min-width:40px;">Auto</span>
+            </div>
+        </div>
 
-    <div class="group" style="margin-top: 25px;">
-        <span class="label-tag">Images </span>
-        <input type="file" id="batchInp" accept="image/*" multiple>
-    </div>
+        <div class="lib-scroll" id="editorLogoLib" style="width:100%;"></div>
 
-    <div class="grid-title">
-        <span class="label-tag">Gallery</span>
-        <span id="batchCount" style="font-size: 10px; color: var(--p);">0 Files</span>
-    </div>
-    <div id="thumbGrid" class="thumb-grid"></div>
-
-    <button class="btn-main" onclick="startProcess()">PROCESS & DOWNLOAD ZIP</button>
-    <div id="status" class="status">Ready</div>
-</div>
-
-<!-- FULL SCREEN CUSTOMIZER -->
-<div id="editorOverlay">
-    <div style="display: flex; justify-content: space-between; width: 100%; max-width: 450px; margin-bottom: 20px;">
-        <h3 style="margin:0">Customize Placement</h3>
-        <button onclick="closeEditor()" style="background: none; border: none; color: white; font-size: 20px;">✕</button>
+        <canvas id="cvs"></canvas>
     </div>
     
-    <div class="editor-tools">
-        <button id="lBtn" class="tool-btn active" onclick="setMode('logo')">Logo Spot</button>
-        <button id="pBtn" class="tool-btn" onclick="setMode('phone')">Phone Spot</button>
-        <button class="tool-btn" style="background: #ef4444;" onclick="clearCurrent()">Reset</button>
+    <div class="editor-footer">
+        <button class="btn-save-one" onclick="closeEditor()">SAVE FOR THIS IMAGE</button>
+        <button class="btn-save-batch" onclick="applyToBatch()">💾 SAVE & APPLY TO ALL</button>
     </div>
-
-    <canvas id="cvs"></canvas>
-
-    <button class="btn-done" onclick="closeEditor()">SAVE PLACEMENT</button>
 </div>
 
 <script>
     const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
-    let brandLogo = null, fileData = [], activeIdx = 0, editMode = 'logo';
-    let isDrawing = false, startX, startY;
+    let logoLibrary = [], fileData = [], activeIdx = 0, activeLogoIdx = 0;
+    let mode = 'logo', drawing = false, sx, sy, isNewDraw = true, deleteZones = [];
+    let batchSettings = null;
 
-    // Handle Logo Loading
-    document.getElementById('logoInp').onchange = (e) => {
-        const r = new FileReader();
-        r.onload = (ev) => {
-            brandLogo = new Image();
-            brandLogo.onload = () => document.getElementById('logoPreview').src = ev.target.result;
-            brandLogo.src = ev.target.result;
-        };
-        r.readAsDataURL(e.target.files[0]);
+    document.getElementById('logoInp').onchange = async (e) => {
+        const files = Array.from(e.target.files);
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const clean = removeBG(img);
+                    logoLibrary.push({ img: clean, src: clean.src });
+                    renderLogoLib();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
-    // Handle Batch Loading
     document.getElementById('batchInp').onchange = (e) => {
         const files = Array.from(e.target.files);
-        fileData = files.map(f => ({ file: f, logoTarget: null, phoneTarget: null, color: "#ffffff", imgObj: null }));
-        
-        document.getElementById('batchCount').innerText = `${files.length} Files Loaded`;
-        renderGrid();
+        for (const f of files) fileData.push({ file: f, placements: [] });
     };
 
-    function renderGrid() {
-        const grid = document.getElementById('thumbGrid');
-        grid.innerHTML = "";
-        fileData.forEach((data, i) => {
-            const div = document.createElement('div');
-            div.className = "thumb-item" + (data.logoTarget ? " customized" : "");
-            
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(data.file);
-            
-            const btn = document.createElement('button');
-            btn.className = "btn-edit-small";
-            btn.innerText = "CUSTOMIZE";
-            btn.onclick = () => openEditor(i);
-            
-            div.appendChild(img);
-            div.appendChild(btn);
-            grid.appendChild(div);
+    function removeBG(img) {
+        const c = document.createElement('canvas'), x = c.getContext('2d');
+        c.width = img.width; c.height = img.height; x.drawImage(img, 0, 0);
+        const id = x.getImageData(0, 0, c.width, c.height);
+        for (let i = 0; i < id.data.length; i += 4) {
+            if (id.data[i] > 240 && id.data[i+1] > 240 && id.data[i+2] > 240) id.data[i+3] = 0;
+        }
+        x.putImageData(id, 0, 0);
+        const ni = new Image(); ni.src = c.toDataURL(); return ni;
+    }
+
+    function renderLogoLib() {
+        const libs = [document.getElementById('logoLib'), document.getElementById('editorLogoLib')];
+        libs.forEach(lib => {
+            if(!lib) return;
+            const add = lib.querySelector('.add-btn'); lib.innerHTML = "";
+            if(add) lib.appendChild(add);
+            logoLibrary.forEach((logo, i) => {
+                const item = document.createElement('div'); item.className = "lib-item" + (i === activeLogoIdx ? " active" : "");
+                const img = document.createElement('img'); img.src = logo.src;
+                img.onclick = () => { activeLogoIdx = i; renderLogoLib(); };
+                const cross = document.createElement('div'); cross.className = "remove-icon"; cross.innerText = "✕";
+                cross.onclick = (e) => { e.stopPropagation(); logoLibrary.splice(i, 1); renderLogoLib(); };
+                item.append(img, cross); lib.appendChild(item);
+            });
+        });
+    }
+
+    function toggleGallery() {
+        const gal = document.getElementById('galleryContainer');
+        gal.style.display = gal.style.display === "none" ? "block" : "none";
+        if(gal.style.display === "block") renderGallery();
+    }
+
+    function renderGallery() {
+        const gal = document.getElementById('gallery'); gal.innerHTML = "";
+        fileData.forEach((d, i) => {
+            const wrap = document.createElement('div'); wrap.className = "thumb-box";
+            const img = document.createElement('img'); img.src = URL.createObjectURL(d.file);
+            const edit = document.createElement('button');
+            edit.style = "position:absolute; inset:0; background:rgba(0,0,0,0.1); color:white; border:none; font-weight:bold; cursor:pointer;";
+            edit.innerText = "EDIT"; edit.onclick = () => openEditor(i);
+            wrap.append(img, edit); gal.append(wrap);
         });
     }
 
     function openEditor(idx) {
-        activeIdx = idx;
-        const data = fileData[idx];
-        document.getElementById('editorOverlay').style.display = "flex";
-        
-        const img = new Image();
-        img.onload = () => {
-            cvs.width = img.width; cvs.height = img.height;
-            data.imgObj = img;
-            refreshCanvas();
-        };
-        img.src = URL.createObjectURL(data.file);
+        activeIdx = idx; document.getElementById('editor').style.display = "flex";
+        const d = fileData[idx], i = new Image();
+        i.onload = () => { cvs.width = i.width; cvs.height = i.height; d.imgObj = i; redraw(); };
+        i.src = URL.createObjectURL(d.file);
+    }
+    function closeEditor() { document.getElementById('editor').style.display = "none"; }
+    function applyToBatch() { batchSettings = JSON.parse(JSON.stringify(fileData[activeIdx].placements)); closeEditor(); }
+    function resetPic() { fileData[activeIdx].placements = []; redraw(); }
+
+    function redraw() {
+        const d = fileData[activeIdx]; if(!d.imgObj) return;
+        ctx.drawImage(d.imgObj, 0, 0);
+        deleteZones = [];
+        d.placements.forEach((p, idx) => {
+            if(p.type === 'logo') {
+                const l = logoLibrary[p.lIdx].img;
+                const s = Math.min(Math.abs(p.box.w) / l.width, Math.abs(p.box.h) / l.height);
+                ctx.drawImage(l, p.box.x, p.box.y, l.width * s, l.height * s);
+            } else {
+                ctx.fillStyle = p.color; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                const lines = p.text.split('\n');
+                const fSize = p.fontSize > 0 ? p.fontSize : Math.abs(p.box.h) / (lines.length * 1.3);
+                ctx.font = `bold ${fSize}px sans-serif`;
+                lines.forEach((line, i) => {
+                    const yPos = p.box.y + (p.box.h / (lines.length + 1)) * (i + 1);
+                    ctx.fillText(line, p.box.x + (p.box.w/2), yPos);
+                });
+            }
+            const cx = p.box.x + p.box.w, cy = p.box.y;
+            ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "white"; ctx.font = "bold 20px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("✕", cx, cy);
+            deleteZones.push({ x: cx, y: cy, r: 30, idx });
+        });
     }
 
-    function closeEditor() {
-        document.getElementById('editorOverlay').style.display = "none";
-        renderGrid();
-    }
-
-    function refreshCanvas() {
-        const data = fileData[activeIdx];
-        if(!data.imgObj) return;
-        ctx.drawImage(data.imgObj, 0, 0);
-        
-        if(data.logoTarget) {
-            ctx.fillStyle = data.color; ctx.fillRect(data.logoTarget.x, data.logoTarget.y, data.logoTarget.w, data.logoTarget.h);
-            ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 8; ctx.strokeRect(data.logoTarget.x, data.logoTarget.y, data.logoTarget.w, data.logoTarget.h);
-        }
-        if(data.phoneTarget) {
-            ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
-            ctx.strokeStyle = "#10b981"; ctx.lineWidth = 8; ctx.strokeRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
-        }
-    }
-
-    // Drawing Listeners
     function getXY(e) {
-        const rect = cvs.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return {
-            x: (clientX - rect.left) * (cvs.width / rect.width),
-            y: (clientY - rect.top) * (cvs.height / rect.height)
-        };
+        const r = cvs.getBoundingClientRect(), t = e.touches ? e.touches[0] : e;
+        return { x: (t.clientX - r.left) * (cvs.width / r.width), y: (t.clientY - r.top) * (cvs.height / r.height) };
     }
 
-    function handleStart(e) {
-        isDrawing = true;
-        const pos = getXY(e);
-        startX = pos.x; startY = pos.y;
-        if(editMode === 'logo') {
-            const p = ctx.getImageData(startX, startY, 1, 1).data;
-            fileData[activeIdx].color = `rgb(${p[0]},${p[1]},${p[2]})`;
-        }
+    cvs.onmousedown = (e) => {
+        const p = getXY(e);
+        const del = deleteZones.find(z => Math.sqrt((p.x-z.x)**2 + (p.y-z.y)**2) < z.r);
+        if(del) { fileData[activeIdx].placements.splice(del.idx, 1); redraw(); return; }
+        drawing = true; isNewDraw = true; sx = p.x; sy = p.y;
+    };
+
+    cvs.onmousemove = (e) => {
+        if(!drawing) return;
+        const p = getXY(e);
+        const box = { x: sx, y: sy, w: p.x - sx, h: p.y - sy };
+        const d = fileData[activeIdx];
+        if(isNewDraw) {
+            if(mode === 'logo') d.placements.push({ type:'logo', lIdx:activeLogoIdx, box });
+            else d.placements.push({ type:'text', text:document.getElementById('customTextInp').value, color:document.getElementById('textColor').value, fontSize:parseInt(document.getElementById('fontSlider').value), box });
+            isNewDraw = false;
+        } else { d.placements[d.placements.length-1].box = box; }
+        redraw();
+    };
+    window.onmouseup = () => { drawing = false; };
+    cvs.addEventListener('touchstart', (e) => { cvs.onmousedown(e); e.preventDefault(); }, {passive:false});
+    cvs.addEventListener('touchmove', (e) => { cvs.onmousemove(e); e.preventDefault(); }, {passive:false});
+    cvs.addEventListener('touchend', () => { drawing = false; });
+
+    function setMode(m) {
+        mode = m;
+        document.getElementById('lMode').style.background = m === 'logo' ? 'var(--accent)' : '#334155';
+        document.getElementById('pMode').style.background = m === 'text' ? 'var(--accent)' : '#334155';
+        document.getElementById('textOptions').style.display = m === 'text' ? 'block' : 'none';
+        document.getElementById('editorLogoLib').style.display = m === 'logo' ? 'flex' : 'none';
     }
 
-    function handleMove(e) {
-        if(!isDrawing) return;
-        const pos = getXY(e);
-        const area = { x: startX, y: startY, w: pos.x - startX, h: pos.y - startY };
-        if(editMode === 'logo') fileData[activeIdx].logoTarget = area;
-        else fileData[activeIdx].phoneTarget = area;
-        refreshCanvas();
-        if(e.touches) e.preventDefault();
-    }
-
-    cvs.onmousedown = handleStart;
-    cvs.onmousemove = handleMove;
-    window.onmouseup = () => isDrawing = false;
-    cvs.addEventListener('touchstart', handleStart);
-    cvs.addEventListener('touchmove', handleMove, {passive:false});
-    cvs.addEventListener('touchend', () => isDrawing = false);
-
-    function setMode(m) { 
-        editMode = m; 
-        document.getElementById('lBtn').classList.toggle('active', m==='logo');
-        document.getElementById('pBtn').classList.toggle('active', m==='phone');
-    }
-    
-    function clearCurrent() {
-        if(editMode === 'logo') fileData[activeIdx].logoTarget = null;
-        else fileData[activeIdx].phoneTarget = null;
-        refreshCanvas();
-    }
-
-    // Process Final
-    async function startProcess() {
-        if(!fileData.length || !brandLogo) return alert("Missing Logo or Stock!");
-        const zip = new JSZip(), phoneText = document.getElementById('phoneInp').value;
-        const status = document.getElementById('status');
-
+    async function startExport() {
+        const zip = new JSZip();
         for(let i=0; i<fileData.length; i++) {
-            status.innerText = `Rendering ${i+1}/${fileData.length}`;
-            const canvas = await finalizeImage(fileData[i], phoneText);
+            const canvas = await finalize(fileData[i]);
             const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-            zip.file(`rebranded_${i+1}.jpg`, blob);
+            zip.file(`branded_${i+1}.jpg`, blob);
         }
-        
-        const content = await zip.generateAsync({type:"blob"});
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
-        link.download = "Rebranded_Jewelry.zip";
-        link.click();
-        status.innerText = "Complete!";
+        const b = await zip.generateAsync({type:"blob"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "Batch.zip"; a.click();
     }
 
-    function finalizeImage(data, phone) {
+    function finalize(data) {
         return new Promise(res => {
             const img = new Image();
             img.onload = () => {
                 const c = document.createElement('canvas'), x = c.getContext('2d');
-                c.width = img.width; c.height = img.height;
-                x.drawImage(img, 0, 0);
-
-                const lT = data.logoTarget || { x: 40, y: 40, w: c.height*0.18, h: c.height*0.18 };
-                if(data.logoTarget) { x.fillStyle = data.color; x.fillRect(lT.x, lT.y, lT.w, lT.h); }
-                const s = Math.min(lT.w / brandLogo.width, lT.h / brandLogo.height);
-                x.drawImage(brandLogo, lT.x, lT.y, brandLogo.width * s, brandLogo.height * s);
-
-                if(phone) {
-                    if(data.phoneTarget) {
-                        x.fillStyle = "white"; x.fillRect(data.phoneTarget.x, data.phoneTarget.y, data.phoneTarget.w, data.phoneTarget.h);
-                        x.fillStyle = "black"; x.font = `bold ${data.phoneTarget.h * 0.6}px sans-serif`;
-                        x.textAlign = "center"; x.textBaseline = "middle";
-                        x.fillText(phone, data.phoneTarget.x + (data.phoneTarget.w/2), data.phoneTarget.y + (data.phoneTarget.h/2));
+                c.width = img.width; c.height = img.height; x.drawImage(img, 0, 0);
+                const pl = (batchSettings && batchSettings.length > 0) ? batchSettings : data.placements;
+                pl.forEach(p => {
+                    if(p.type === 'logo') {
+                        const l = logoLibrary[p.lIdx].img;
+                        const s = Math.min(Math.abs(p.box.w) / l.width, Math.abs(p.box.h) / l.height);
+                        x.drawImage(l, p.box.x, p.box.y, l.width * s, l.height * s);
                     } else {
-                        const bh = c.height * 0.08;
-                        x.fillStyle = "white"; x.fillRect(0, c.height-bh, c.width, bh);
-                        x.fillStyle = "black"; x.font = `bold ${bh*0.45}px sans-serif`;
-                        x.textAlign = "right"; x.fillText(phone, c.width-40, c.height-bh/2+10);
+                        x.fillStyle = p.color; x.textAlign = "center"; x.textBaseline = "middle";
+                        const lines = p.text.split('\n');
+                        const fSize = p.fontSize > 0 ? p.fontSize : Math.abs(p.box.h) / (lines.length * 1.3);
+                        x.font = `bold ${fSize}px sans-serif`;
+                        lines.forEach((line, i) => {
+                            const yPos = p.box.y + (p.box.h / (lines.length + 1)) * (i + 1);
+                            x.fillText(line, p.box.x + (p.box.w/2), yPos);
+                        });
                     }
-                }
+                });
                 res(c);
             };
             img.src = URL.createObjectURL(data.file);
