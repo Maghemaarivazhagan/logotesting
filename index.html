@@ -3,328 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wholesale Multi-Text Stamper</title>
+    <title>Wholesale Studio | Enterprise Batch</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --accent: #6366f1; --bg: #0f172a; --card: #1e293b; --danger: #ef4444; --success: #10b981; }
-        
-        /* Hide all scrollbars globally */
-        * { scrollbar-width: none; -ms-overflow-style: none; }
-        *::-webkit-scrollbar { display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --text: #f8fafc; --border: rgba(255,255,255,0.1); }
+        * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: #f8fafc; 
-            margin: 0; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            overflow-x: hidden; 
-        }
+        header { padding: 12px 20px; background: #090e1a; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 200; }
+        .nav-link { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: #94a3b8; }
+        .nav-link.active { background: var(--accent); color: white; }
 
-        .container { background: var(--card); padding: 20px; border-radius: 24px; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1); }
-        
-        .lib-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; min-height: 80px; }
-        .lib-item { position: relative; width: 65px; height: 65px; flex-shrink: 0; }
-        .lib-item img { width: 100%; height: 100%; border-radius: 12px; background: #fff; object-fit: contain; border: 2px solid transparent; cursor: pointer; }
-        .lib-item.active img { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
-        
-        .remove-icon { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--card); cursor: pointer; z-index: 10; font-weight: bold; }
-        .add-btn { width: 65px; height: 65px; border-radius: 12px; border: 2px dashed #334155; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; flex-shrink: 0; color: #94a3b8; }
+        .btn { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
 
-        label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px; }
-        textarea, input[type="file"], input[type="color"], input[type="range"] { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
+        #workspace { flex: 1; display: flex; overflow: hidden; position: relative; }
+        #sidebar { width: 320px; background: var(--card); border-right: 1px solid var(--border); padding: 20px; display: none; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 50; }
         
-        #galleryContainer { display: none; margin-top: 20px; width: 100%; }
-        .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 16px; }
-        .thumb-box { position: relative; border-radius: 12px; aspect-ratio: 1/1; background: #000; }
-        .thumb-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid #334155; }
+        label { display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+        .logo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .logo-item { background: white; padding: 5px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; height: 60px; display: flex; align-items: center; justify-content: center; }
+        .logo-item img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        /* EDITOR: No scrollbars, fixed positions */
-        #editor { 
-            display: none; position: fixed; inset: 0; background: #000; z-index: 100; 
-            flex-direction: column; align-items: center; padding: 10px;
-            overflow: hidden; 
-        }
-        
-        .editor-header { width: 100%; max-width: 450px; flex-shrink: 0; }
-        
-        .editor-content { 
-            flex-grow: 1; 
-            width: 100%; 
-            max-width: 450px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center;
-            overflow: hidden;
-        }
+        #canvas-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #050810; position: relative; padding: 10px; }
+        canvas { max-width: 100%; max-height: 75vh; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
 
-        .editor-footer { width: 100%; max-width: 450px; flex-shrink: 0; padding-top: 10px; }
+        #form-view { position: absolute; inset: 0; background: var(--bg); z-index: 150; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .form-card { width: 100%; max-width: 450px; padding: 30px; background: var(--card); border-radius: 16px; border: 1px solid var(--border); }
+        input[type="text"], textarea, input[type="file"] { width: 100%; padding: 12px; background: #0f172a; border: 1px solid var(--border); color: white; border-radius: 8px; outline: none; margin-bottom: 10px; font-family: inherit; }
 
-        canvas { 
-            width: 100%; 
-            max-width: 400px; 
-            max-height: 50vh; /* Prevents vertical overflow */
-            border-radius: 16px; 
-            touch-action: none; 
-            background: #111; 
-            cursor: crosshair;
-            object-fit: contain;
-        }
-        
-        .btn-main { background: var(--accent); color: white; border: none; padding: 18px; width: 100%; border-radius: 16px; font-weight: bold; font-size: 1rem; cursor: pointer; }
-        .btn-save-one { background: #f59e0b; color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 5px; cursor: pointer; }
-        .btn-save-batch { background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 5px; cursor: pointer; }
-        .btn-view { background: #334155; color: white; border: none; padding: 12px; width: 100%; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
-        
-        .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
-        .tool-btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 12px; }
+        #studio-footer { position: absolute; bottom: 20px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); padding: 10px 15px; border-radius: 14px; display: none; gap: 12px; border: 1px solid var(--border); align-items: center; }
+        .loader { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; color: white; flex-direction: column; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <label>1. Logos</label>
-    <div class="lib-scroll" id="logoLib">
-        <div class="add-btn" onclick="document.getElementById('logoInp').click()">+</div>
+<header>
+    <div style="font-weight: 800; font-size: 18px;">WHOLESALE<span>STUDIO</span></div>
+    <div style="display:flex; gap:10px;">
+        <div class="nav-link active" id="tab-form" onclick="showView('form')">Setup</div>
+        <div class="nav-link" id="tab-studio" onclick="showView('studio')">Studio</div>
     </div>
-    <input type="file" id="logoInp" accept="image/*,.zip" multiple style="display:none">
+</header>
 
-    <label>2. Stock (100+ Images)</label>
-    <input type="file" id="batchInp" accept="image/*,.zip" multiple>
-    
-    <button id="viewBtn" class="btn-view" onclick="toggleGallery()">📸 SHOW GALLERY / EDIT</button>
-
-    <div id="galleryContainer">
-        <div id="gallery" class="gallery"></div>
-    </div>
-
-    <button class="btn-main" onclick="startExport()">BRAND & DOWNLOAD ALL</button>
-</div>
-
-<div id="editor">
-    <div class="editor-header">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0">Layout Editor</h3>
-            <button onclick="closeEditor()" style="background:none; border:none; color:white; font-size:32px;">✕</button>
-        </div>
-
-        <div class="toolbar">
-            <button id="lMode" onclick="setMode('logo')" class="tool-btn" style="background:var(--accent)">Logos</button>
-            <button id="pMode" onclick="setMode('text')" class="tool-btn" style="background:#334155">Text</button>
-            <button onclick="resetPic()" class="tool-btn" style="background:var(--danger)">Reset</button>
-        </div>
-    </div>
-
-    <div class="editor-content">
-        <div id="textOptions" style="display:none; width:100%;">
-            <textarea id="customTextInp" placeholder="Enter text, then draw box..."></textarea>
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <input type="color" id="textColor" value="#ffffff" style="height:40px; width:60px; margin:0; padding:2px;">
-                <input type="range" id="fontSlider" min="0" max="200" value="0" style="margin:0;">
-                <span id="fontVal" style="font-size:10px; min-width:40px;">Auto</span>
+<div id="workspace">
+    <div id="sidebar">
+        <label>Selected Item Tools</label>
+        <div id="edit-tools" style="display:none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+            <textarea id="studioText" placeholder="Edit content..." oninput="syncEdit()"></textarea>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="color" id="textColor" oninput="syncEdit()" style="width:50px; height:40px; border:none; background:none; cursor:pointer;">
+                <span style="font-size:10px; color:#64748b;">Drag handle to resize</span>
             </div>
         </div>
 
-        <div class="lib-scroll" id="editorLogoLib" style="width:100%;"></div>
+        <label>Add Elements</label>
+        <button class="btn btn-ghost" style="width:100%; margin-bottom:10px;" onclick="addExtraText()">+ Add Extra Text</button>
+        <div class="logo-grid" id="logoDrawer"></div>
 
-        <canvas id="cvs"></canvas>
+        <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+            <button class="btn btn-primary" onclick="saveToAll()">💾 Sync Layout to All</button>
+            <button class="btn btn-success" onclick="downloadCurrentAsZip()">📦 Download Current (ZIP)</button>
+            <button class="btn btn-ghost" onclick="undo()" style="color: #ef4444;">↩ Undo Last</button>
+        </div>
     </div>
-    
-    <div class="editor-footer">
-        <button class="btn-save-one" onclick="closeEditor()">SAVE FOR THIS IMAGE</button>
-        <button class="btn-save-batch" onclick="applyToBatch()">💾 SAVE & APPLY TO ALL</button>
+
+    <div id="canvas-area">
+        <canvas id="cvs"></canvas>
+        <div id="studio-footer">
+            <button class="btn btn-ghost" onclick="nav(-1)">Prev</button>
+            <span id="counter" style="font-size:12px; font-weight:700;">1/1</span>
+            <button class="btn btn-ghost" onclick="nav(1)">Next</button>
+        </div>
+    </div>
+
+    <div id="form-view">
+        <div class="form-card">
+            <h2 style="margin-bottom: 20px;">Catalog Generator</h2>
+            <label>1. Logos (ZIP or Images)</label>
+            <input type="file" id="logoInp" accept="image/*,.zip" multiple>
+            <label>2. Product Photos (ZIP or Images)</label>
+            <input type="file" id="imgInp" accept="image/*,.zip" multiple>
+            <label>3. Branding Text (Bottom-Left)</label>
+            <input type="text" id="defaultText" placeholder="e.g. Code: 101 | Price: ₹499">
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                <button class="btn btn-ghost" onclick="startProcessing('studio')">🎨 Enter Studio</button>
+                <button class="btn btn-success" onclick="startProcessing('export')">📦 Fast Export (ZIPs)</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<div class="loader" id="loader">
+    <h2 id="load-title">Processing...</h2>
+    <p id="load-detail" style="font-size:14px; margin-top:10px;"></p>
+</div>
+
 <script>
+    let logos = [], images = [], activeIdx = 0;
+    let selectedItem = null, dragMode = null; 
     const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d');
-    let logoLibrary = [], fileData = [], activeIdx = 0, activeLogoIdx = 0;
-    let mode = 'logo', drawing = false, sx, sy, isNewDraw = true, deleteZones = [];
-    let batchSettings = null;
+
+    function showView(v) {
+        if(v === 'studio' && images.length === 0) return;
+        document.getElementById('form-view').style.display = v === 'form' ? 'flex' : 'none';
+        document.getElementById('sidebar').style.display = v === 'studio' ? 'flex' : 'none';
+        document.getElementById('studio-footer').style.display = v === 'studio' ? 'flex' : 'none';
+        document.getElementById('tab-form').classList.toggle('active', v === 'form');
+        document.getElementById('tab-studio').classList.toggle('active', v === 'studio');
+        if(v === 'studio') loadImg(activeIdx);
+    }
+
+    async function handleZip(file) {
+        const zip = new JSZip(), content = await zip.loadAsync(file), arr = [];
+        for (let n in content.files) {
+            if (!content.files[n].dir && /\.(jpe?g|png|webp)$/i.test(n)) {
+                const blob = await content.files[n].async("blob");
+                arr.push(new File([blob], n.split('/').pop(), { type: blob.type }));
+            }
+        }
+        return arr;
+    }
 
     document.getElementById('logoInp').onchange = async (e) => {
-        const files = Array.from(e.target.files);
-        for (const file of files) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const img = new Image();
-                img.onload = () => {
-                    const clean = removeBG(img);
-                    logoLibrary.push({ img: clean, src: clean.src });
-                    renderLogoLib();
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
+        let files = Array.from(e.target.files);
+        if (files[0]?.name.endsWith('.zip')) files = await handleZip(files[0]);
+        logos = [];
+        for (let f of files) {
+            const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = URL.createObjectURL(f); });
+            logos.push({ img, name: f.name });
         }
+        renderLogoDrawer();
     };
 
-    document.getElementById('batchInp').onchange = (e) => {
-        const files = Array.from(e.target.files);
-        for (const f of files) fileData.push({ file: f, placements: [] });
-    };
-
-    function removeBG(img) {
-        const c = document.createElement('canvas'), x = c.getContext('2d');
-        c.width = img.width; c.height = img.height; x.drawImage(img, 0, 0);
-        const id = x.getImageData(0, 0, c.width, c.height);
-        for (let i = 0; i < id.data.length; i += 4) {
-            if (id.data[i] > 240 && id.data[i+1] > 240 && id.data[i+2] > 240) id.data[i+3] = 0;
-        }
-        x.putImageData(id, 0, 0);
-        const ni = new Image(); ni.src = c.toDataURL(); return ni;
-    }
-
-    function renderLogoLib() {
-        const libs = [document.getElementById('logoLib'), document.getElementById('editorLogoLib')];
-        libs.forEach(lib => {
-            if(!lib) return;
-            const add = lib.querySelector('.add-btn'); lib.innerHTML = "";
-            if(add) lib.appendChild(add);
-            logoLibrary.forEach((logo, i) => {
-                const item = document.createElement('div'); item.className = "lib-item" + (i === activeLogoIdx ? " active" : "");
-                const img = document.createElement('img'); img.src = logo.src;
-                img.onclick = () => { activeLogoIdx = i; renderLogoLib(); };
-                const cross = document.createElement('div'); cross.className = "remove-icon"; cross.innerText = "✕";
-                cross.onclick = (e) => { e.stopPropagation(); logoLibrary.splice(i, 1); renderLogoLib(); };
-                item.append(img, cross); lib.appendChild(item);
-            });
-        });
-    }
-
-    function toggleGallery() {
-        const gal = document.getElementById('galleryContainer');
-        gal.style.display = gal.style.display === "none" ? "block" : "none";
-        if(gal.style.display === "block") renderGallery();
-    }
-
-    function renderGallery() {
-        const gal = document.getElementById('gallery'); gal.innerHTML = "";
-        fileData.forEach((d, i) => {
-            const wrap = document.createElement('div'); wrap.className = "thumb-box";
-            const img = document.createElement('img'); img.src = URL.createObjectURL(d.file);
-            const edit = document.createElement('button');
-            edit.style = "position:absolute; inset:0; background:rgba(0,0,0,0.1); color:white; border:none; font-weight:bold; cursor:pointer;";
-            edit.innerText = "EDIT"; edit.onclick = () => openEditor(i);
-            wrap.append(img, edit); gal.append(wrap);
-        });
-    }
-
-    function openEditor(idx) {
-        activeIdx = idx; document.getElementById('editor').style.display = "flex";
-        const d = fileData[idx], i = new Image();
-        i.onload = () => { cvs.width = i.width; cvs.height = i.height; d.imgObj = i; redraw(); };
-        i.src = URL.createObjectURL(d.file);
-    }
-    function closeEditor() { document.getElementById('editor').style.display = "none"; }
-    function applyToBatch() { batchSettings = JSON.parse(JSON.stringify(fileData[activeIdx].placements)); closeEditor(); }
-    function resetPic() { fileData[activeIdx].placements = []; redraw(); }
-
-    function redraw() {
-        const d = fileData[activeIdx]; if(!d.imgObj) return;
-        ctx.drawImage(d.imgObj, 0, 0);
-        deleteZones = [];
-        d.placements.forEach((p, idx) => {
-            if(p.type === 'logo') {
-                const l = logoLibrary[p.lIdx].img;
-                const s = Math.min(Math.abs(p.box.w) / l.width, Math.abs(p.box.h) / l.height);
-                ctx.drawImage(l, p.box.x, p.box.y, l.width * s, l.height * s);
-            } else {
-                ctx.fillStyle = p.color; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                const lines = p.text.split('\n');
-                const fSize = p.fontSize > 0 ? p.fontSize : Math.abs(p.box.h) / (lines.length * 1.3);
-                ctx.font = `bold ${fSize}px sans-serif`;
-                lines.forEach((line, i) => {
-                    const yPos = p.box.y + (p.box.h / (lines.length + 1)) * (i + 1);
-                    ctx.fillText(line, p.box.x + (p.box.w/2), yPos);
-                });
+    async function startProcessing(mode) {
+        let files = Array.from(document.getElementById('imgInp').files);
+        if (files.length === 0) return alert("Select product photos!");
+        if (files[0]?.name.endsWith('.zip')) files = await handleZip(files[0]);
+        
+        images = files.map(f => ({ name: f.name, url: URL.createObjectURL(f), imgObj: null, layers: [] }));
+        const txt = document.getElementById('defaultText').value;
+        
+        images.forEach(img => {
+            if(logos.length > 0) {
+                const l = logos[0].img, w = 0.16, h = (l.height/l.width)*w;
+                img.layers.push({ type: 'logo', img: l, x: 0.80, y: 0.82, w, h });
             }
-            const cx = p.box.x + p.box.w, cy = p.box.y;
-            ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "white"; ctx.font = "bold 20px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("✕", cx, cy);
-            deleteZones.push({ x: cx, y: cy, r: 30, idx });
+            if(txt) img.layers.push({ type: 'text', text: txt, x: 0.05, y: 0.90, size: 0.05, color: '#ffffff' });
         });
+
+        if(mode === 'export') exportBatch();
+        else showView('studio');
     }
 
-    function getXY(e) {
-        const r = cvs.getBoundingClientRect(), t = e.touches ? e.touches[0] : e;
-        return { x: (t.clientX - r.left) * (cvs.width / r.width), y: (t.clientY - r.top) * (cvs.height / r.height) };
-    }
-
-    cvs.onmousedown = (e) => {
-        const p = getXY(e);
-        const del = deleteZones.find(z => Math.sqrt((p.x-z.x)**2 + (p.y-z.y)**2) < z.r);
-        if(del) { fileData[activeIdx].placements.splice(del.idx, 1); redraw(); return; }
-        drawing = true; isNewDraw = true; sx = p.x; sy = p.y;
-    };
-
-    cvs.onmousemove = (e) => {
-        if(!drawing) return;
-        const p = getXY(e);
-        const box = { x: sx, y: sy, w: p.x - sx, h: p.y - sy };
-        const d = fileData[activeIdx];
-        if(isNewDraw) {
-            if(mode === 'logo') d.placements.push({ type:'logo', lIdx:activeLogoIdx, box });
-            else d.placements.push({ type:'text', text:document.getElementById('customTextInp').value, color:document.getElementById('textColor').value, fontSize:parseInt(document.getElementById('fontSlider').value), box });
-            isNewDraw = false;
-        } else { d.placements[d.placements.length-1].box = box; }
-        redraw();
-    };
-    window.onmouseup = () => { drawing = false; };
-    cvs.addEventListener('touchstart', (e) => { cvs.onmousedown(e); e.preventDefault(); }, {passive:false});
-    cvs.addEventListener('touchmove', (e) => { cvs.onmousemove(e); e.preventDefault(); }, {passive:false});
-    cvs.addEventListener('touchend', () => { drawing = false; });
-
-    function setMode(m) {
-        mode = m;
-        document.getElementById('lMode').style.background = m === 'logo' ? 'var(--accent)' : '#334155';
-        document.getElementById('pMode').style.background = m === 'text' ? 'var(--accent)' : '#334155';
-        document.getElementById('textOptions').style.display = m === 'text' ? 'block' : 'none';
-        document.getElementById('editorLogoLib').style.display = m === 'logo' ? 'flex' : 'none';
-    }
-
-    async function startExport() {
-        const zip = new JSZip();
-        for(let i=0; i<fileData.length; i++) {
-            const canvas = await finalize(fileData[i]);
-            const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
-            zip.file(`branded_${i+1}.jpg`, blob);
-        }
-        const b = await zip.generateAsync({type:"blob"});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "Batch.zip"; a.click();
-    }
-
-    function finalize(data) {
-        return new Promise(res => {
-            const img = new Image();
-            img.onload = () => {
-                const c = document.createElement('canvas'), x = c.getContext('2d');
-                c.width = img.width; c.height = img.height; x.drawImage(img, 0, 0);
-                const pl = (batchSettings && batchSettings.length > 0) ? batchSettings : data.placements;
-                pl.forEach(p => {
-                    if(p.type === 'logo') {
-                        const l = logoLibrary[p.lIdx].img;
-                        const s = Math.min(Math.abs(p.box.w) / l.width, Math.abs(p.box.h) / l.height);
-                        x.drawImage(l, p.box.x, p.box.y, l.width * s, l.height * s);
-                    } else {
-                        x.fillStyle = p.color; x.textAlign = "center"; x.textBaseline = "middle";
-                        const lines = p.text.split('\n');
-                        const fSize = p.fontSize > 0 ? p.fontSize : Math.abs(p.box.h) / (lines.length * 1.3);
-                        x.font = `bold ${fSize}px sans-serif`;
-                        lines.forEach((line, i) => {
-                            const yPos = p.box.y + (p.box.h / (lines.length + 1)) * (i + 1);
-                            x.fillText(line, p.box.x + (p.box.w/2), yPos);
-                        });
-                    }
-                });
-                res(c);
+    function renderLogoDrawer() {
+        const d = document.getElementById('logoDrawer'); d.innerHTML = '';
+        logos.forEach((l, i) => {
+            const div = document.createElement('div'); div.className = 'logo-item';
+            div.innerHTML = `<img src="${l.img.src}">`;
+            div.onclick = () => {
+                const w = 0.16, h = (l.img.height/l.img.width)*w;
+                images[activeIdx].layers.push({ type:'logo', img:l.img, x:0.4, y:0.4, w, h });
+                draw();
             };
-            img.src = URL.createObjectURL(data.file);
+            d.appendChild(div);
         });
+    }
+
+    async function loadImg(idx) {
+        activeIdx = idx; const d = images[idx];
+        if(!d.imgObj) d.imgObj = await new Promise(r => { const i=new Image(); i.onload=()=>r(i); i.src=d.url; });
+        cvs.width = d.imgObj.width; cvs.height = d.imgObj.height;
+        draw();
+        document.getElementById('counter').innerText = `${activeIdx+1}/${images.length}`;
+    }
+
+    function draw() {
+        const d = images[activeIdx]; if(!d) return;
+        ctx.drawImage(d.imgObj, 0, 0);
+        d.layers.forEach(l => {
+            const x = l.x*cvs.width, y = l.y*cvs.height;
+            if(l.type === 'logo') {
+                const w = l.w*cvs.width, h = l.h*cvs.height;
+                ctx.drawImage(l.img, x, y, w, h);
+                if(l === selectedItem) {
+                    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 4; ctx.strokeRect(x,y,w,h);
+                    ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(x+w, y+h, 20, 0, Math.PI*2); ctx.fill();
+                }
+            } else {
+                const s = l.size*cvs.width;
+                ctx.font = `bold ${s}px Inter`; ctx.fillStyle = l.color;
+                ctx.shadowColor = "rgba(0,0,0,0.7)"; ctx.shadowBlur = 10;
+                l.text.split('\n').forEach((line, i) => ctx.fillText(line, x, y + (i*s*1.2)));
+                if(l === selectedItem) {
+                    const tw = ctx.measureText(l.text).width;
+                    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3; ctx.strokeRect(x, y-s, tw, s*1.3);
+                    ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(x+tw, y, 20, 0, Math.PI*2); ctx.fill();
+                }
+            }
+        });
+    }
+
+    function handleDown(e) {
+        const r = cvs.getBoundingClientRect();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = (cx - r.left) / r.width, y = (cy - r.top) / r.height;
+
+        if (selectedItem) {
+            const sx = selectedItem.x*cvs.width, sy = selectedItem.y*cvs.height;
+            const sw = (selectedItem.w || 0.1)*cvs.width, sh = (selectedItem.h || selectedItem.size)*cvs.height;
+            if (Math.hypot((x*cvs.width)-(sx+sw), (y*cvs.height)-sy) < 50 || Math.hypot((x*cvs.width)-(sx+sw), (y*cvs.height)-(sy+sh)) < 50) {
+                dragMode = 'resize'; return;
+            }
+        }
+
+        selectedItem = images[activeIdx].layers.slice().reverse().find(l => x > l.x && x < l.x+(l.w||0.15) && y > l.y-(l.size||0.05) && y < l.y+(l.h||0.15));
+        const tools = document.getElementById('edit-tools');
+        if(selectedItem && selectedItem.type === 'text') {
+            tools.style.display = 'block';
+            document.getElementById('studioText').value = selectedItem.text;
+            document.getElementById('textColor').value = selectedItem.color;
+        } else { tools.style.display = 'none'; }
+        
+        if(selectedItem) dragMode = 'move';
+        draw();
+    }
+
+    function handleMove(e) {
+        if(!selectedItem || !dragMode) return; e.preventDefault();
+        const r = cvs.getBoundingClientRect();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = (cx - r.left) / r.width, y = (cy - r.top) / r.height;
+
+        if (dragMode === 'move') { selectedItem.x = x; selectedItem.y = y; }
+        else {
+            const nw = Math.max(0.02, x - selectedItem.x);
+            if(selectedItem.type==='logo') { selectedItem.w = nw; selectedItem.h = (selectedItem.img.height/selectedItem.img.width)*nw; }
+            else { selectedItem.size = nw/2; }
+        }
+        draw();
+    }
+
+    cvs.addEventListener('mousedown', handleDown);
+    cvs.addEventListener('touchstart', handleDown);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('mouseup', () => dragMode = null);
+    window.addEventListener('touchend', () => dragMode = null);
+
+    function addExtraText() { images[activeIdx].layers.push({ type: 'text', text: 'New Text', x: 0.4, y: 0.4, size: 0.05, color: '#ffffff' }); draw(); }
+    function syncEdit() { if(selectedItem && selectedItem.type === 'text') { selectedItem.text = document.getElementById('studioText').value; selectedItem.color = document.getElementById('textColor').value; draw(); } }
+    function undo() { images[activeIdx].layers.pop(); selectedItem = null; draw(); }
+    function nav(d) { let n = activeIdx + d; if(n >= 0 && n < images.length) { selectedItem = null; loadImg(n); } }
+    
+    function saveToAll() {
+        const t = images[activeIdx].layers.map(l => ({...l}));
+        images.forEach((img, i) => { if(i !== activeIdx) img.layers = t.map(tl => ({...tl})); });
+        alert("Synced layout to all!");
+    }
+
+    // DIRECT ZIP DOWNLOAD FOR CURRENT STUDIO WORK
+    async function downloadCurrentAsZip() {
+        draw();
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+        document.getElementById('load-title').innerText = "Generating ZIP...";
+        
+        const zip = new JSZip();
+        const blob = await new Promise(r => cvs.toBlob(r, 'image/jpeg', 0.95));
+        zip.file(`custom_${images[activeIdx].name || 'design'}.jpg`, blob);
+        
+        const content = await zip.generateAsync({type:"blob"});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = `Custom_Single_${Date.now()}.zip`;
+        a.click();
+        
+        loader.style.display = 'none';
+    }
+
+    // BATCH EXPORT LOGIC (ZIP PER LOGO)
+    async function exportBatch() {
+        if(images.length === 0) return alert("Nothing to export!");
+        const loader = document.getElementById('loader'), title = document.getElementById('load-title'), detail = document.getElementById('load-detail');
+        loader.style.display = 'flex';
+        
+        for (let lIdx = 0; lIdx < Math.max(1, logos.length); lIdx++) {
+            const logoRef = logos[lIdx];
+            title.innerText = `Logo ${lIdx + 1} of ${logos.length}`;
+            detail.innerText = `Packaging ZIP: ${logoRef ? logoRef.name : 'Standard'}`;
+
+            const zip = new JSZip();
+            for (let i = 0; i < images.length; i++) {
+                await loadImg(i);
+                if(logoRef) {
+                    images[i].layers.filter(l => l.type === 'logo').forEach(l => l.img = logoRef.img);
+                }
+                draw();
+                const blob = await new Promise(r => cvs.toBlob(r, 'image/jpeg', 0.9));
+                zip.file(`product_${i+1}.jpg`, blob);
+            }
+            
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(content);
+            a.download = logoRef ? `Batch_${logoRef.name.split('.')[0]}.zip` : `Export_Batch.zip`;
+            a.click();
+            await new Promise(r => setTimeout(r, 1000));
+        }
+        loader.style.display = 'none';
     }
 </script>
 </body>
